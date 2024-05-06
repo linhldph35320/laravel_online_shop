@@ -24,11 +24,13 @@
                 <form action="" method="GET">
                     <div class="card-header">
                         <div class="card-title">
-                            <button type="button" onclick="window.location.href='{{ route('categories.index') }}'" class="btn btn-default btn-sm">Reset</button>
+                            <button type="button" onclick="window.location.href='{{ route('categories.index') }}'"
+                                class="btn btn-default btn-sm">Reset</button>
                         </div>
                         <div class="card-tools">
                             <div class="input-group input-group" style="width: 250px;">
-                                <input type="text" value="{{ Request::get('keyword') }}" name="keyword" class="form-control float-right" placeholder="Search">
+                                <input type="text" value="{{ Request::get('keyword') }}" name="keyword"
+                                    class="form-control float-right" placeholder="Search">
 
                                 <div class="input-group-append">
                                     <button type="submit" class="btn btn-default">
@@ -76,7 +78,7 @@
                                             @endif
                                         </td>
                                         <td>
-                                            <a href="#">
+                                            <a href="{{ route('categories.edit', $category->id) }}">
                                                 <svg class="filament-link-icon w-4 h-4 mr-1"
                                                     xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
                                                     fill="currentColor" aria-hidden="true">
@@ -85,7 +87,8 @@
                                                     </path>
                                                 </svg>
                                             </a>
-                                            <a href="#" class="text-danger w-4 h-4 mr-1">
+                                            <a href="#" onclick="deleteCategory({{ $category->id }})"
+                                                class="text-danger w-4 h-4 mr-1">
                                                 <svg wire:loading.remove.delay="" wire:target=""
                                                     class="filament-link-icon w-4 h-4 mr-1"
                                                     xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
@@ -124,4 +127,26 @@
 @endsection
 
 @section('customJs')
+    <script>
+        function deleteCategory(id) {
+            var url = '{{ route('categories.delete', 'ID') }}'
+            var newUrl = url.replace("ID", id)
+            if (confirm("Are you sure you want to delete")) {
+                $.ajax({
+                    url: newUrl,
+                    type: 'delete',
+                    data: {},
+                    dataType: 'json',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        if (response["status"]) {
+                            window.location.href = "{{ route('categories.index') }}";
+                        }
+                    }
+                });
+            }
+        }
+    </script>
 @endsection
