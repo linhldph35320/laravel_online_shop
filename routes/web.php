@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\admin\AdminLoginController;
+use App\Http\Controllers\admin\BrandsController;
 use App\Http\Controllers\admin\CategoryController;
 use App\Http\Controllers\admin\HomeController;
 use App\Http\Controllers\admin\SubCategoryController;
@@ -49,6 +50,15 @@ Route::group(['prefix'=>'admin'],function(){
         Route::get('/sub-categories/{subCategory}/edit',[SubCategoryController::class,'edit'])->name('sub-categories.edit');
         Route::put('/sub-categories/{subCategory}',[SubCategoryController::class,'update'])->name('sub-categories.update');
         Route::delete('/sub-categories/{subCategory}',[SubCategoryController::class,'destroy'])->name('sub-categories.delete');
+
+        // Các route của brand
+        // Route::get('/sub-categories',[SubCategoryController::class,'index'])->name('sub-categories.index');
+        Route::get('/brands',[BrandsController::class,'index'])->name('brands.index');
+        Route::get('/brands/create',[BrandsController::class,'create'])->name('brands.create');
+        Route::post('/brands',[BrandsController::class,'store'])->name('brands.store');
+        Route::get('/brands/{brand}/edit',[BrandsController::class,'edit'])->name('brands.edit');
+        Route::put('/brands/{brand}',[BrandsController::class,'update'])->name('brands.update');
+        Route::delete('/brands/{brand}',[BrandsController::class,'destroy'])->name('brands.delete');
 
         Route::post('/upload-temp-image',[TempImagesController::class,'create'])->name('temp-images.create');
 
