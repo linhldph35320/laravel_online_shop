@@ -4,6 +4,8 @@ use App\Http\Controllers\admin\AdminLoginController;
 use App\Http\Controllers\admin\BrandsController;
 use App\Http\Controllers\admin\CategoryController;
 use App\Http\Controllers\admin\HomeController;
+use App\Http\Controllers\admin\ProductController;
+use App\Http\Controllers\admin\ProductSubCategoryController;
 use App\Http\Controllers\admin\SubCategoryController;
 use App\Http\Controllers\admin\TempImagesController;
 use Illuminate\Http\Request;
@@ -60,6 +62,12 @@ Route::group(['prefix'=>'admin'],function(){
         Route::put('/brands/{brand}',[BrandsController::class,'update'])->name('brands.update');
         Route::delete('/brands/{brand}',[BrandsController::class,'destroy'])->name('brands.delete');
 
+        // Các route của products
+        Route::get('/products/create',[ProductController::class,'create'])->name('products.create');
+        Route::post('/products',[ProductController::class,'store'])->name('products.store');
+
+
+        Route::get('/product-subcategories',[ProductSubCategoryController::class,'index'])->name('product-subcategories.index');
         Route::post('/upload-temp-image',[TempImagesController::class,'create'])->name('temp-images.create');
 
         Route::get('/getSlug',function(Request $request){
