@@ -148,7 +148,6 @@ class CategoryController extends Controller
                 // $image->resize(450, 600);
                 $image->cover(450,600);
                 $image->save($dPath);
-
                 $category->image = $newImageName;
                 $category->save();
 
