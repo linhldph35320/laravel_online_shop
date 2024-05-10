@@ -15,8 +15,14 @@ use Intervention\Image\Drivers\Gd\Driver;
 
 class ProductController extends Controller
 {
-    public function index(){
-
+    public function index(Request $request){
+        $products = Product::latest('id')->with('product_images');
+        if($request->get('keyword') != ""){
+            $products = $products->where('title','like','%'.$request->keyword.'%');
+        }
+        $products = $products->paginate();
+        $data['products'] = $products;
+        return view('admin.products.list',$data);
     }
 
     public function create(){
@@ -85,7 +91,7 @@ class ProductController extends Controller
                     // Thumb to
 
                     $sourcePath = public_path('/temp/' . $tempImageInfo->name);
-                    $destPath = public_path('/uploads/product/large/' . $tempImageInfo->name);
+                    $destPath = public_path('/uploads/product/large/' . $imageName);
                     $manager = new ImageManager(new Driver());
                     $img = $manager->read($sourcePath);
                     $img->resize(width:1400);
@@ -93,8 +99,7 @@ class ProductController extends Controller
 
                     // Thumb bé
 
-                    $sourcePath = public_path('/temp/' . $tempImageInfo->name);
-                    $destPath = public_path('/uploads/product/small/' . $tempImageInfo->name);
+                    $destPath = public_path('/uploads/product/small/' . $imageName);
                     $manager = new ImageManager(new Driver());
                     $img = $manager->read($sourcePath);
                     $img->cover(300,300);
