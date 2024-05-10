@@ -7,6 +7,7 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
+use App\Models\SubCategory;
 use App\Models\TempImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -112,6 +113,93 @@ class ProductController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => 'Product added successfully.'
+            ]);
+
+        }else{
+            return response()->json([
+                'status' => false,
+                'errors' => $validator->errors()
+            ]);
+        }
+    }
+
+    public function edit($id, Request $request){
+        $data = [];
+        $product = Product::find($id);
+
+        if(empty($product)){
+            return redirect()->route('products.index')->with('error','Product not found');
+        }
+
+        // Đưa hình ảnh từ database ra màn hình
+        $productImages = ProductImage::where('product_id',$product->id)->get();
+
+        $subCategories = SubCategory::where('category_id',$product->category_id)->get();
+
+        $categories = Category::orderBy('name','ASC')->get();
+
+        $brands = Brand::orderBy('name','ASC')->get();
+
+        $data['product'] = $product;
+        $data['productImages'] = $productImages;
+        $data['subCategories'] = $subCategories;
+        $data['categories'] = $categories;
+        $data['brands'] = $brands;
+        return view('admin.products.edit',$data);
+    }
+
+    public function update($id, Request $request){
+        $product = Product::find($id);
+        if(empty($product)){
+            session()->flash('error','Product not found');
+            return response()->json([
+                'status' => false,
+                'notFound' => true,
+                'message' => 'Product not found'
+            ]);
+        }
+
+        $rules = [
+            'title' => 'required',
+            'slug' => 'required|unique:products,slug,'.$product->id.',id',
+            'price' => 'required|numeric',
+            'sku' => 'required|unique:products,sku,'.$product->id.',id',
+            'track_qty' => 'required|in:Yes,No',
+            'category' => 'required|numeric',
+            'is_featured' => 'required|in:Yes,No',
+        ];
+
+        if(!empty($request->track_qty) && $request->track_qty == 'Yes'){
+            $rules['qty'] = 'required|numeric';
+        }
+
+        $validator = Validator::make($request->all(),$rules);
+
+        if($validator->passes()){
+
+            $product->title = $request->title;
+            $product->slug = $request->slug;
+            $product->description = $request->description;
+            $product->price = $request->price;
+            $product->compare_price = $request->compare_price;
+            $product->sku = $request->sku;
+            $product->barcode = $request->barcode;
+            $product->track_qty = $request->track_qty;
+            $product->qty = $request->qty;
+            $product->status = $request->status;
+            $product->category_id = $request->category;
+            $product->sub_category_id = $request->sub_category;
+            $product->brand_id = $request->brand;
+            $product->is_featured = $request->is_featured;
+            $product->save();
+
+            // Lưu thư viện ảnh
+
+            session()->flash('success','Product updated successfully.');
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Product updated successfully.'
             ]);
 
         }else{
