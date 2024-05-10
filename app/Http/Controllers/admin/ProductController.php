@@ -10,6 +10,7 @@ use App\Models\ProductImage;
 use App\Models\SubCategory;
 use App\Models\TempImage;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Validator;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
@@ -151,12 +152,7 @@ class ProductController extends Controller
     public function update($id, Request $request){
         $product = Product::find($id);
         if(empty($product)){
-            session()->flash('error','Product not found');
-            return response()->json([
-                'status' => false,
-                'notFound' => true,
-                'message' => 'Product not found'
-            ]);
+            return redirect()->route('products.index')->with('error','Product not found');
         }
 
         $rules = [
@@ -208,5 +204,37 @@ class ProductController extends Controller
                 'errors' => $validator->errors()
             ]);
         }
+    }
+
+    public function destroy($id,Request $request){
+        $product = Product::find($id);
+
+        if(empty($product)){
+            session()->flash('error','Product not found.');
+            return response()->json([
+                'status' => false,
+                'notFound' => true
+            ]);
+        }
+
+        $productImages = ProductImage::where('product_id',$id)->get();
+
+        if(!empty($productImages)){
+            foreach($productImages as $productImage){
+
+                File::delete(public_path('uploads/product/large/'.$productImage->image));
+                File::delete(public_path('uploads/product/small/'.$productImage->image));
+            }
+
+            ProductImage::where('product_id',$id)->delete();
+        }
+
+        $product->delete();
+
+        session()->flash('success','Product deleted successfully.');
+        return response()->json([
+            'status' => true,
+            'message' => 'Product deleted successfully.'
+        ]);
     }
 }
