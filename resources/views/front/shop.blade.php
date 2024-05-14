@@ -37,22 +37,23 @@
                                                     </button>
                                                 </h2>
                                             @else
-                                                <a href="#" class="nav-item nav-link">{{ $category->name }}</a>
+                                                <a href="{{ route('front.shop',$category->slug) }}" class="nav-item nav-link {{ ($categorySelected == $category->id) ? 'text-primary' : ''}}">{{ $category->name }}</a>
                                             @endif
-                                            <div id="collapseOne-{{ $key }}" class="accordion-collapse collapse"
+                                            @if ($category->sub_category->isNotEmpty())
+                                            <div id="collapseOne-{{ $key }}" class="accordion-collapse collapse {{ ($categorySelected == $category->id) ? 'show' : ''}}"
                                                 aria-labelledby="headingOne" data-bs-parent="#accordionExample"
                                                 style="">
                                                 <div class="accordion-body">
                                                     <div class="navbar-nav">
-                                                        @if ($category->sub_category->isNotEmpty())
                                                             @foreach ($category->sub_category as $subCategory)
-                                                                <a href="#"
-                                                                    class="nav-item nav-link">{{ $subCategory->name }}</a>
+                                                                <a href="{{ route('front.shop',[$category->slug,$subCategory->slug]) }}"
+                                                                    class="nav-item nav-link {{ ($subCategorySelected == $subCategory->id) ? 'text-primary' : ''}}">{{ $subCategory->name }}</a>
                                                             @endforeach
-                                                        @endif
+
                                                     </div>
                                                 </div>
                                             </div>
+                                            @endif
                                         </div>
                                     @endforeach
                                 @endif
@@ -69,9 +70,9 @@
                             @if ($brands->isNotEmpty())
                                 @foreach ($brands as $brand)
                                     <div class="form-check mb-2">
-                                        <input class="form-check-input" type="checkbox" name="brand[]"
+                                        <input {{ (in_array($brand->id, $brandsArray)) ? 'checked' : '' }} class="form-check-input brand-label" type="checkbox" name="brand[]"
                                             value="{{ $brand->id }}" id="brand-{{ $brand->id }}">
-                                        <label class="form-check-label" for="flexCheckDefault">
+                                        <label class="form-check-label" for="brand-{{ $brand->id }}">
                                             {{ $brand->name }}
                                         </label>
                                     </div>
@@ -86,30 +87,7 @@
 
                     <div class="card">
                         <div class="card-body">
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
-                                <label class="form-check-label" for="flexCheckDefault">
-                                    $0-$100
-                                </label>
-                            </div>
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked">
-                                <label class="form-check-label" for="flexCheckChecked">
-                                    $100-$200
-                                </label>
-                            </div>
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked">
-                                <label class="form-check-label" for="flexCheckChecked">
-                                    $200-$500
-                                </label>
-                            </div>
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked">
-                                <label class="form-check-label" for="flexCheckChecked">
-                                    $500+
-                                </label>
-                            </div>
+                            <input type="text" class="js-range-slider" name="my_range" value="" />
                         </div>
                     </div>
                 </div>
@@ -118,7 +96,7 @@
                         <div class="col-12 pb-1">
                             <div class="d-flex align-items-center justify-content-end mb-4">
                                 <div class="ml-2">
-                                    <div class="btn-group">
+                                    {{-- <div class="btn-group">
                                         <button type="button" class="btn btn-sm btn-light dropdown-toggle"
                                             data-bs-toggle="dropdown">Sorting</button>
                                         <div class="dropdown-menu dropdown-menu-right">
@@ -126,7 +104,12 @@
                                             <a class="dropdown-item" href="#">Price High</a>
                                             <a class="dropdown-item" href="#">Price Low</a>
                                         </div>
-                                    </div>
+                                    </div> --}}
+                                    <select name="sort" id="sort" class="form-control">
+                                        <option value="latest" {{ ($sort == 'latest') ? 'selected' : ''}}>Latest</option>
+                                        <option value="price_desc" {{ ($sort == 'price_desc') ? 'selected' : ''}}>Price High</option>
+                                        <option value="price_asc" {{ ($sort == 'price_asc') ? 'selected' : ''}}>Price Low</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -176,4 +159,60 @@
             </div>
         </div>
     </section>
+@endsection
+
+@section('customJs')
+<script>
+    rangeSlider = $(".js-range-slider").ionRangeSlider({
+        type: "double",
+        min: 0,
+        max: 1000,
+        from: {{ $priceMin }},
+        step: 10,
+        to: {{ $priceMax }},
+        skin: "round",
+        max_postfix: "+",
+        prefix: "$",
+        onFinish: function(){
+            apply_filters();
+        }
+    });
+
+    var slider = $(".js-range-slider").data("ionRangeSlider");
+
+    $(".brand-label").change(function(){
+        apply_filters();
+    });
+
+    $("#sort").change(function(){
+        apply_filters();
+    });
+
+    function apply_filters(){
+        var brands = [];
+
+        $(".brand-label").each(function(){
+            if($(this).is(":checked") == true){
+                brands.push($(this).val());
+            }
+        });
+
+        var url = '{{ url()->current() }}?';
+
+        // Tìm theo giá
+        url += '&price_min='+slider.result.from+'&price_max='+slider.result.to;
+
+        // Tìm theo hãng
+        if(brands.length > 0){
+            url += '&brand='+brands.toString()
+        }
+
+
+        // Sắp xếp
+        url += '&sort='+$("#sort").val()
+
+        window.location.href = url;
+    }
+
+</script>
 @endsection
