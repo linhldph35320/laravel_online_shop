@@ -152,8 +152,10 @@
                                     </div>
                                 </div>
                             @endforeach
-                        @else
                         @endif
+                        <div class="col-md-12 pt-5">
+                            {{ $products->withQueryString()->links() }}
+                        </div>
                     </div>
                 </div>
             </div>
