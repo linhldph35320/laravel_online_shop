@@ -72,6 +72,7 @@ class ProductController extends Controller
             $product->is_featured = $request->is_featured;
             $product->shipping_returns = $request->shipping_returns;
             $product->short_description = $request->short_description;
+            $product->related_products = (!empty($request->related_products)) ? implode(',',$request->related_products) : '';
             $product->save();
 
             // Lưu thư viện ảnh
@@ -98,7 +99,7 @@ class ProductController extends Controller
                     $destPath = public_path('/uploads/product/large/' . $imageName);
                     $manager = new ImageManager(new Driver());
                     $img = $manager->read($sourcePath);
-                    $img->resize(width:1400);
+                    $img->cover(1000,1000);
                     $img->save($destPath);
 
                     // Thumb bé
@@ -106,7 +107,7 @@ class ProductController extends Controller
                     $destPath = public_path('/uploads/product/small/' . $imageName);
                     $manager = new ImageManager(new Driver());
                     $img = $manager->read($sourcePath);
-                    $img->cover(300,300);
+                    $img->cover(150,150);
                     $img->save($destPath);
                 }
             }
@@ -143,11 +144,20 @@ class ProductController extends Controller
 
         $brands = Brand::orderBy('name','ASC')->get();
 
+        $relatedProducts = [];
+
+        if($product->related_products != ''){
+            $productArray = explode(',',$product->related_products);
+
+            $relatedProducts = Product::whereIn('id',$productArray)->get();
+        }
+
         $data['product'] = $product;
         $data['productImages'] = $productImages;
         $data['subCategories'] = $subCategories;
         $data['categories'] = $categories;
         $data['brands'] = $brands;
+        $data['relatedProducts'] = $relatedProducts;
         return view('admin.products.edit',$data);
     }
 
@@ -191,6 +201,7 @@ class ProductController extends Controller
             $product->is_featured = $request->is_featured;
             $product->shipping_returns = $request->shipping_returns;
             $product->short_description = $request->short_description;
+            $product->related_products = (!empty($request->related_products)) ? implode(',',$request->related_products) : '';
             $product->save();
 
             // Lưu thư viện ảnh
@@ -239,6 +250,24 @@ class ProductController extends Controller
         return response()->json([
             'status' => true,
             'message' => 'Product deleted successfully.'
+        ]);
+    }
+
+    public function getProducts(Request $request){
+        $tempProduct = [];
+        if($request->term !=""){
+            $products = Product::where('title','like','%'.$request->term.'%')->get();
+
+            if($products != null){
+                foreach($products as $product){
+                    $tempProduct[] = array('id'=>$product->id,'text'=>$product->title);
+                }
+            }
+        }
+
+        return response()->json([
+            'tags' => $tempProduct,
+            'status' => true
         ]);
     }
 }

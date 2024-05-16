@@ -32,7 +32,7 @@ class ProductImageController extends Controller
         $destPath = public_path('/uploads/product/large/' . $imageName);
         $manager = new ImageManager(new Driver());
         $img = $manager->read($sourcePath);
-        $img->resize(width: 1400);
+        $img->cover(1000,1000);
         $img->save($destPath);
 
         // Thumb bé
@@ -40,7 +40,7 @@ class ProductImageController extends Controller
         $destPath = public_path('/uploads/product/small/' . $imageName);
         $manager = new ImageManager(new Driver());
         $img = $manager->read($sourcePath);
-        $img->cover(300, 300);
+        $img->cover(150, 150);
         $img->save($destPath);
 
         return response()->json([
