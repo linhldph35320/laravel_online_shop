@@ -122,7 +122,7 @@
                                 <div class="col-md-4">
                                     <div class="card product-card">
                                         <div class="product-image position-relative">
-                                            <a href="#" class="product-img">
+                                            <a href="{{ route("front.product",$product->slug) }}" class="product-img">
                                                 @if (!empty($productImage->image))
                                                     <img class="card-img-top"
                                                         src="{{ asset('uploads/product/small/' . $productImage->image) }}">
