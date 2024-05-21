@@ -39,7 +39,8 @@ class CartController extends Controller
                 ['productImage' => (!empty($product->product_images)) ? $product->product_images->first() : '' ]);
 
                 $status = true;
-                $message = $product->title.' added in cart';
+                $message = '<strong>'.$product->title.'</strong> added in your cart successfully.';
+                session()->flash('success',$message);
             }else{
                 $status = false;
                 $message = $product->title.' already added in cart';
@@ -48,11 +49,63 @@ class CartController extends Controller
         } else{
             Cart::add($product->id, $product->title, 1, $product->price, ['productImage' => (!empty($product->product_images)) ? $product->product_images->first() : '' ]);
             $status = true;
-            $message = $product->title.' added in cart';
+            $message = '<strong>'.$product->title.'</strong> added in your cart successfully.';
+            session()->flash('success',$message);
         }
 
         return response()->json([
             'status' => $status,
+            'message' => $message
+        ]);
+    }
+
+    public function updateCart(Request $request){
+        $rowId = $request->rowId;
+        $qty = $request->qty;
+        $itemInfo = Cart::get($rowId);
+        $product = Product::find($itemInfo->id);
+
+        // Kiểm tra số lượng sản phẩm còn không
+        if($product->track_qty == 'Yes'){
+            if($qty <= $product->qty){
+                Cart::update($rowId, $qty);
+                $message = 'Cart updated successfully';
+                $status = true;
+                session()->flash('success',$message);
+            }else{
+                $message = 'Requested qty ('.$qty.') not available in stock.';
+                $status = false;
+                session()->flash('error',$message);
+            }
+        }else{
+            Cart::update($rowId, $qty);
+            $message = 'Cart updated successfully';
+            $status = true;
+        }
+
+        return response()->json([
+            'status' => $status,
+            'message' => $message
+        ]);
+    }
+
+    public function deleteItem(Request $request){
+        $itemInfo = Cart::get($request->rowId);
+        if($itemInfo == null){
+            $errorMessage = 'Item not found in cart.';
+            session()->flash('error',$errorMessage);
+            return response()->json([
+                'status' => false,
+                'message' => $errorMessage
+            ]);
+        }
+
+        Cart::remove($request->rowId);
+
+        $message = 'Item remove from cart successfully.';
+        session()->flash('success',$message);
+        return response()->json([
+            'status' => true,
             'message' => $message
         ]);
     }
