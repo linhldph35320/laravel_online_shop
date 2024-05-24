@@ -18,24 +18,24 @@
                 <form action="" method="post" name="registrationForm" id="registrationForm">
                     <h4 class="modal-title">Register Now</h4>
                     <div class="form-group">
-                        <input type="text" class="form-control" placeholder="Name" id="name" name="name">
+                        <input type="text" class="form-control" placeholder="Name" id="name" name="name" value="{{ old('name') }}">
                         <p></p>
                     </div>
                     <div class="form-group">
-                        <input type="text" class="form-control" placeholder="Email" id="email" name="email">
+                        <input type="text" class="form-control" placeholder="Email" id="email" name="email" value="{{ old('email') }}">
                         <p></p>
                     </div>
                     <div class="form-group">
-                        <input type="text" class="form-control" placeholder="Phone" id="phone" name="phone">
+                        <input type="text" class="form-control" placeholder="Phone" id="phone" name="phone" value="{{ old('phone') }}">
                         <p></p>
                     </div>
                     <div class="form-group">
-                        <input type="password" class="form-control" placeholder="Password" id="password" name="password">
+                        <input type="password" class="form-control" placeholder="Password" id="password" name="password" value="{{ old('password') }}">
                         <p></p>
                     </div>
                     <div class="form-group">
                         <input type="password" class="form-control" placeholder="Confirm Password" id="password_confirmation"
-                            name="password_confirmation">
+                            name="password_confirmation" value="{{ old('password_confirmation') }}">
                         <p></p>
                     </div>
                     <div class="form-group small">
@@ -43,7 +43,7 @@
                     </div>
                     <button type="submit" class="btn btn-dark btn-block btn-lg" value="Register">Register</button>
                 </form>
-                <div class="text-center small">Already have an account? <a href="login.php">Login Now</a></div>
+                <div class="text-center small">Already have an account? <a href="{{ route('account.login') }}">Login Now</a></div>
             </div>
         </div>
     </section>
