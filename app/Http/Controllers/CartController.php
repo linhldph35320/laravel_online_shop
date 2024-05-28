@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Country;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Gloudemans\Shoppingcart\Facades\Cart;
+use Illuminate\Support\Facades\Auth;
 
 class CartController extends Controller
 {
@@ -114,5 +116,30 @@ class CartController extends Controller
         $cartContent = Cart::content();
         $data['cartContent'] = $cartContent;
         return view('front.cart',$data);
+    }
+
+    public function checkout(){
+        // Nếu giỏ hàng rỗng thì trả lại về giỏ hàng
+        if(Cart::count() == 0){
+            return redirect()->route('front.cart');
+        }
+
+        // Nếu người dùng chưa đăng nhập thì trả về trang đăng nhập
+        if(Auth::check() == false){
+
+            if(!session()->has('url.intended')){
+                session(['url.intended' => url()->current()]);
+            }
+
+            return redirect()->route('account.login');
+        }
+
+        session()->forget('url.intended');
+
+        $countries = Country::orderBy('name','ASC')->get();
+
+        return view('front.checkout',[
+            'countries' => $countries
+        ]);
     }
 }
