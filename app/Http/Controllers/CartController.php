@@ -3,10 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Country;
+use App\Models\Order;
+use App\Models\OrdersCustomerAddress;
+use App\Models\OrdersItems;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Gloudemans\Shoppingcart\Facades\Cart;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 
 class CartController extends Controller
 {
@@ -134,12 +138,122 @@ class CartController extends Controller
             return redirect()->route('account.login');
         }
 
+        $user = Auth::user()->id;
+        $customerAddress = OrdersCustomerAddress::where('user_id',$user)->first();
+
         session()->forget('url.intended');
 
         $countries = Country::orderBy('name','ASC')->get();
 
         return view('front.checkout',[
-            'countries' => $countries
+            'countries' => $countries,
+            'customerAddress' => $customerAddress
+        ]);
+    }
+
+    public function processCheckout(Request $request){
+        // Bước 1: validate
+
+        $validator = Validator::make($request->all(),[
+            'first_name' => 'required|min:5',
+            'last_name' => 'required',
+            'email' => 'required|email',
+            'country' => 'required',
+            'address' => 'required|min:30',
+            'city' => 'required',
+            'state' => 'required',
+            'zip' => 'required',
+            'mobile' => 'required'
+        ]);
+
+        if($validator->fails()){
+            return response()->json([
+                'message' => 'Please fix the errors',
+                'status' => false,
+                'errors' => $validator->errors()
+            ]);
+        }
+
+        // $customerAddress = CustomerAddress::find();
+
+        // Bước 2: lưu thông tin vào bảng OrdersCustomerAddress
+        $user = Auth::user();
+
+        // Cập nhật thông tin khi trùng user_id hoặc thêm mới nếu khác user_id
+        OrdersCustomerAddress::updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'user_id' => $user->id,
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'email' => $request->email,
+                'mobile' => $request->mobile,
+                'country_id' => $request->country,
+                'address' => $request->address,
+                'apartment' => $request->apartment,
+                'city' => $request->city,
+                'state' => $request->state,
+                'zip' => $request->zip,
+            ]
+        );
+
+        // Bước 3: thêm dữ liệu vào bảng orders
+        if($request->payment_method == 'cod'){
+
+            $shipping = 0;
+            $discount = 0;
+            $subTotal = Cart::subtotal(2,'.','');
+            $grandTotal = $subTotal + $shipping;
+
+            $order = new Order();
+            $order->subtotal = $subTotal;
+            $order->shipping = $shipping;
+            $order->grand_total = $grandTotal;
+            $order->user_id = $user->id;
+
+            $order->first_name = $request->first_name;
+            $order->last_name = $request->last_name;
+            $order->email = $request->email;
+            $order->mobile = $request->mobile;
+            $order->address = $request->address;
+            $order->apartment = $request->apartment;
+            $order->state = $request->state;
+            $order->city = $request->city;
+            $order->zip = $request->zip;
+            $order->notes = $request->notes;
+            $order->country_id = $request->country;
+            $order->save();
+
+            // Bước 4: thêm dữ liệu sản phẩm vào bảng order item
+            foreach (Cart::content() as $item) {
+                $orderItem = new OrdersItems();
+                $orderItem->product_id = $item->id;
+                $orderItem->order_id = $order->id;
+                $orderItem->name = $item->name;
+                $orderItem->qty = $item->qty;
+                $orderItem->price = $item->price;
+                $orderItem->total = $item->price*$item->qty;
+                $orderItem->save();
+            }
+
+            session()->flash('success','You have successfully placed your order.');
+
+            Cart::destroy();
+
+            return response()->json([
+                'message' => 'Order save successfully.',
+                'orderId' => $order->id,
+                'status' => true
+            ]);
+
+        }else{
+
+        }
+    }
+
+    public function thankyou($id){
+        return view('front.thanks',[
+            'id'=>$id
         ]);
     }
 }
