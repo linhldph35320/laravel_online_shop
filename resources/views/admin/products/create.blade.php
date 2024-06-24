@@ -271,7 +271,6 @@
             event.preventDefault();
 
             var formArray = $(this).serializeArray();
-            $("button[type='submit']").prop('disabled', true);
 
             $.ajax({
                 url: '{{ route('products.store') }}',
@@ -279,7 +278,6 @@
                 data: formArray,
                 dataType: 'json',
                 success: function(response) {
-                    $("button[type='submit']").prop('disabled', false);
                     if (response['status'] == true) {
                         $(".error").removeClass('invalid-feedback').html('');
                         $("input[type='text'], select,input[type='number']").removeClass('is-invalid');
